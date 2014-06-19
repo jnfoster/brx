@@ -260,7 +260,7 @@ let string_of_char_code n =
 
 let printable_string_of_char_code n =
   if n <= max_code then
-    String.make 1 (Char.chr n)
+    Printf.sprintf "%d" n
   else 
     failwith "invalid character code"
 
@@ -1191,7 +1191,7 @@ let match_string_reverse_positions t0 w =
       else loop acc' (pred i) (ti.derivative (Char.code w.[i])) in
     loop IntSet.empty (pred n) t0
 
-let mk_iter s1 i j = mk_rep s1 i (if j > 0 then Some j else None)
+let mk_iter s1 i jo = mk_rep s1 i jo
 
 let mk_string s = 
   let n = String.length s in 
