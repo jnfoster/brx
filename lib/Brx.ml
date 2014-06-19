@@ -1280,5 +1280,4 @@ let char_derivative r c =
     if easy_empty r' then None
     else Some r'
 
-
-
+let compare = compare_t

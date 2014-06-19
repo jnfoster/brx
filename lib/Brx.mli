@@ -5,6 +5,8 @@ type ('a,'b) alternative = Left of 'a | Right of 'b
 (* regular expressions *)
 type t
 
+val compare : t -> t -> int
+
 (* constants *)
 val epsilon : t 
 val empty : t
