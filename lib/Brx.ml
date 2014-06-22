@@ -648,19 +648,13 @@ let anything =
   t.derivative <- (fun c -> if c > max_code then empty else t);
   t
 
-let ascii_set =
+let alphabet =
   let t = mk_constant (CSet [min_code,max_code]) None (Some [min_code]) true in
   t.derivative <- (fun c -> if c > max_code then empty else epsilon);
   t 
 
-let anyascii =
-  let t = mk_constant (Rep(ascii_set,0,None)) None (Some []) true in
-  t.derivative <- (fun c -> if c > max_code then empty else t);
-  t
-
 let is_epsilon t = t.uid = epsilon.uid
 let is_anything t = t.uid = anything.uid
-let is_anyascii t = t.uid = anyascii.uid
 
 (* main constructor *)
 let rec mk_t d0 = 
@@ -880,7 +874,6 @@ and mk_seqs tl = List.fold_left mk_seq epsilon tl
 
 and mk_alt t1 t2 =
   let rec go ascii (x,acc) l = match acc,l with
-    | acc,[] when ascii && List.for_all (fun t -> t.ascii) acc -> anyascii
     | [],[]        -> empty
     | [t1],[]      -> t1
     | _,[]         ->
@@ -893,7 +886,6 @@ and mk_alt t1 t2 =
         end
     | _,(t1::rest) ->
         if easy_empty t1 then go ascii (x,acc) rest
-        else if is_anyascii t1 then go true (x,acc) rest
         else if is_anything t1 then anything
         else go ascii (x + 883 * t1.hash,t1::acc) rest in
     let rec merge acc l1 l2 = match l1,l2 with
@@ -914,7 +906,6 @@ and mk_alt t1 t2 =
             if easy_empty t1 then t2
             else if easy_empty t2 then t1
             else if is_anything t1 || is_anything t2 then anything
-            else if (is_anyascii t1 && t2.ascii) || (is_anyascii t2 && t1.ascii) then anyascii
             else if is_epsilon t1 then mk_rep t2 0 (Some 1)
             else if is_epsilon t2 then mk_rep t1 0 (Some 1)
             else merge [] [t1] [t2] in 
@@ -927,7 +918,6 @@ and mk_rep t0 i jo =
     if easy_empty t then if i=0 then epsilon else empty
     else if is_epsilon t then epsilon
     else if is_anything t then anything
-    else if is_anyascii t then anyascii
     else 
       let p = (t,i,jo) in 
       try TIIOCache.find rep_cache p 
@@ -940,7 +930,6 @@ and mk_rep t0 i jo =
       | Rep(_,0,Some 1),0,(Some 1) -> t0
       | CSet[mi,ma],0,None         ->
 	  if mi=min_code && ma=max_code then anything
-          else if mi=min_code && ma=max_code then anyascii
 	  else go t0 0 None
       | _,0,Some 0                 -> epsilon
       | _,1,Some 1                 -> t0
@@ -985,8 +974,6 @@ and mk_inter t1 t2 =
         if t1.uid = t2.uid then t1
         else if is_anything t1 then t2 
         else if is_anything t2 then t1
-        else if is_anyascii t1 && t2.ascii then t2
-        else if is_anyascii t2 && t1.ascii then t1
         else if easy_empty t1 || easy_empty t2 then empty
         else if is_epsilon t1 then if t2.final then epsilon else empty
         else if is_epsilon t2 then if t1.final then epsilon else empty
@@ -1011,7 +998,7 @@ and mk_diff t1 t2 =
         mk_alts (List.map (fun ti -> mk_diff ti t2) l1) 
     | CSet s1,_ when is_epsilon t2 -> t1 
     | _ -> 
-        if t1.uid = t2.uid || easy_empty t1 || is_anything t2 || (t1.ascii && is_anyascii t2) then empty
+        if t1.uid = t2.uid || easy_empty t1 || is_anything t2 then empty
         else if easy_empty t2 then t1
         else if is_epsilon t1 then if t2.final then empty else epsilon
         else if is_epsilon t2 then 
@@ -1031,10 +1018,6 @@ and mk_diff t1 t2 =
           match t2.desc with 
             | Diff(t21,t22) when is_anything t21 -> t22
             | _ -> go t1 t2  
-        else if is_anyascii t1 then
-          match t2.desc with
-            | Diff(t21,t22) when is_anyascii t21 -> t22
-            | _ -> go t1 t2
         else go t1 t2 in 
     res
         

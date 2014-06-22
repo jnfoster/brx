@@ -10,7 +10,7 @@ val compare : t -> t -> int
 (* constants *)
 val epsilon : t 
 val empty : t
-val ascii_set : t
+val alphabet : t
 
 (* constructors *)
 val mk_cset : (int * int) list -> t
