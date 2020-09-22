@@ -260,7 +260,9 @@ let string_of_char_code n =
 
 let printable_string_of_char_code n =
   if n <= max_code then
-    Printf.sprintf "%d" n
+    "\\" ^
+    (if n < 10 then "00" else if n < 100 then "0" else "") ^ 
+    (string_of_int n)
   else 
     failwith "invalid character code"
 
@@ -277,7 +279,7 @@ let string_of_cset_code n = match n with
   | n when n >= 32 && n <= 126 -> String.make 1 (Char.chr n) 
   | _ -> 
       "\\" ^ 
-      if n < 100 then "0" else if n < 10 then "00" else "" ^ 
+      (if n < 10 then "00" else if n < 100 then "0" else "") ^ 
       string_of_int n
 
 let string_of_cset_code_pair (n1,n2) = 
@@ -379,9 +381,6 @@ module I2map =
 
 (* let prt = Printf.printf *)
 
-let charmap_empty =
-  [0,min_code]
-
 (* let charmap_print m = *)
 (*   let rec f = function *)
 (*     | [] -> () *)
@@ -450,7 +449,11 @@ let combine_charmaps (m1:charmap) (m2:charmap) =
 
 (* combine a list of maps *)
 let combine_charmap_list ml =
-  List.fold_left (fun m mi -> combine_charmaps m mi) charmap_empty ml
+  match ml with 
+  | [] -> 
+     failwith "combine_charmap_list: empty"
+  | m1::mrest -> 
+     List.fold_left (fun m mi -> combine_charmaps m mi) m1 mrest
 
 let chars_of_charmap (m:charmap) : int list =
   let chars,_ =
